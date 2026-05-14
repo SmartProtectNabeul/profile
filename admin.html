@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Admin</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .admin-container { max-width: 900px; margin: 0 auto; padding: 2rem; }
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        .data-table th, .data-table td { padding: 1rem; border-bottom: 1px solid var(--glass-border); text-align: left; }
+        .badge-status { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; }
+        .status-pending { background: #f39c12; color: white; }
+        .status-accepted { background: #27ae60; color: white; }
+        .section-block { margin-bottom: 3rem; }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <header style="margin-bottom: 2rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem;">
+            <h1>Nexus Admin Dashboard</h1>
+        </header>
+
+        <div class="section-block glass-card" style="padding: 2rem;">
+            <h2>Pending Requests</h2>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Email</th>
+                        <th>Number</th>
+                        <th>Offer</th>
+                        <th>TRX ID</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="requests-tbody">
+                    <!-- Dynamic -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section-block glass-card" style="padding: 2rem;">
+            <h2>Active Subscriptions & Keys</h2>
+            <button class="btn btn-primary" onclick="generateRandomKey()" style="margin-bottom: 1rem;">Generate Manual Key</button>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Key</th>
+                        <th>Assigned Email</th>
+                        <th>Offer</th>
+                        <th>Expires On</th>
+                    </tr>
+                </thead>
+                <tbody id="keys-tbody">
+                    <!-- Dynamic -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script>
+        function loadAdminData() {
+            const requests = JSON.parse(localStorage.getItem('nexus_requests')) || [];
+            const keys = JSON.parse(localStorage.getItem('nexus_keys')) || [];
+
+            const reqBody = document.getElementById('requests-tbody');
+            reqBody.innerHTML = '';
+            requests.forEach((r, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${new Date(r.date).toLocaleDateString()}</td>
+                    <td>${r.email}</td>
+                    <td>${r.number}</td>
+                    <td>${r.offer}</td>
+                    <td>${r.trx}</td>
+                    <td><span class="badge-status ${r.status === 'Pending' ? 'status-pending' : 'status-accepted'}">${r.status}</span></td>
+                    <td>
+                        ${r.status === 'Pending' ? `<button class="btn btn-primary" style="padding: 0.5rem;" onclick="acceptRequest(${index})">Accept</button>` : '-'}
+                    </td>
+                `;
+                reqBody.appendChild(tr);
+            });
+
+            const keysBody = document.getElementById('keys-tbody');
+            keysBody.innerHTML = '';
+            keys.forEach(k => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><code>${k.key}</code></td>
+                    <td>${k.email || 'N/A'}</td>
+                    <td>${k.offer || 'Manual'}</td>
+                    <td>${new Date(k.expires).toLocaleDateString()}</td>
+                `;
+                keysBody.appendChild(tr);
+            });
+        }
+
+        function acceptRequest(index) {
+            const requests = JSON.parse(localStorage.getItem('nexus_requests')) || [];
+            if(requests[index]) {
+                requests[index].status = 'Accepted';
+                
+                // Generate Key
+                const newKey = 'NXS-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+                const offer = requests[index].offer;
+                const months = offer === 'Yearly' ? 12 : 1;
+                
+                const expires = new Date();
+                expires.setMonth(expires.getMonth() + months);
+
+                const keys = JSON.parse(localStorage.getItem('nexus_keys')) || [];
+                keys.push({
+                    key: newKey,
+                    email: requests[index].email,
+                    offer: offer,
+                    expires: expires.toISOString()
+                });
+
+                localStorage.setItem('nexus_requests', JSON.stringify(requests));
+                localStorage.setItem('nexus_keys', JSON.stringify(keys));
+                
+                alert(`Request Accepted! Key generated: ${newKey}\nSend this to: ${requests[index].email}`);
+                loadAdminData();
+            }
+        }
+
+        function generateRandomKey() {
+            const newKey = 'NXS-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+            const expires = new Date();
+            expires.setMonth(expires.getMonth() + 1); // default 1 month
+
+            const keys = JSON.parse(localStorage.getItem('nexus_keys')) || [];
+            keys.push({
+                key: newKey,
+                email: 'Manual',
+                offer: 'Manual',
+                expires: expires.toISOString()
+            });
+            localStorage.setItem('nexus_keys', JSON.stringify(keys));
+            loadAdminData();
+        }
+
+        document.addEventListener('DOMContentLoaded', loadAdminData);
+    </script>
+</body>
+</html>

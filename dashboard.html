@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Nexus</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="dashboard-body">
+    <div class="app-container">
+        <!-- Top bar -->
+        <header class="app-header" id="top-header">
+            <button class="icon-btn" id="logout-btn" onclick="window.location.href='index.html'"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+            <div class="logo">nexus.</div>
+            <button class="icon-btn" id="share-top-btn"><i class="fa-solid fa-paper-plane"></i></button>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="dashboard-main">
+            <!-- TAB: PROFILE -->
+            <div id="tab-profile" class="tab-content active">
+                <div class="glass-card profile-preview">
+                    <div class="banner-container">
+                        <img src="https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=1000&auto=format&fit=crop" alt="Banner" class="banner-img" id="banner-img">
+                        <div class="banner-actions" id="banner-actions">
+                            <button class="badge-btn active" id="edit-badge-btn">edit</button>
+                            <button class="badge-btn" id="preview-badge-btn">preview</button>
+                        </div>
+                    </div>
+                    <div class="avatar-container">
+                        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200&auto=format&fit=crop" alt="Avatar" class="avatar-img" id="avatar-img">
+                    </div>
+                    <div class="profile-info">
+                        <h2 class="profile-name" id="profile-name">Ahmed Najjar</h2>
+                        <h3 class="profile-title" id="profile-title">IT Guy</h3>
+                        <div class="profile-bio">
+                            <div class="bio-line"></div>
+                            <p id="profile-desc">IT student<br>Tunisia, Nabeul<br>ISETN</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons" id="action-buttons-container">
+                    <button class="btn btn-primary btn-block" id="edit-profile-btn">Edit Profile</button>
+                    <button class="btn btn-icon glass-card" id="share-btn"><i class="fa-solid fa-leaf"></i></button>
+                </div>
+
+                <div class="links-list" id="links-container">
+                    <!-- Links rendered here -->
+                </div>
+            </div>
+
+            <!-- TAB: INSIGHTS -->
+            <div id="tab-insights" class="tab-content" style="display: none;">
+                <h2 style="margin-bottom: 1.5rem;">Insights</h2>
+                <div class="glass-card" style="padding: 1.5rem; text-align: center; margin-bottom: 1.5rem;">
+                    <i class="fa-solid fa-eye" style="font-size: 2.5rem; color: var(--accent-primary); margin-bottom: 1rem;"></i>
+                    <h3 style="font-size: 2rem; margin-bottom: 0.5rem;" id="insights-views">0</h3>
+                    <p style="color: var(--text-secondary);">Total Profile Views</p>
+                </div>
+                <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">Recent Visitors</h3>
+                <div class="links-list" id="recent-visitors-list">
+                    <!-- Dynamic Visitors -->
+                </div>
+            </div>
+
+            <!-- TAB: STYLES -->
+            <div id="tab-styles" class="tab-content" style="display: none;">
+                <h2 style="margin-bottom: 1.5rem;">Profile Style</h2>
+                <div class="glass-card" style="padding: 1.5rem;">
+                    <h3 style="margin-bottom: 1rem; font-size: 1rem;">Accent Color</h3>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <button class="color-btn" data-color="#7b61ff" style="background: #7b61ff;"></button>
+                        <button class="color-btn" data-color="#00C9FF" style="background: #00C9FF;"></button>
+                        <button class="color-btn" data-color="#92FE9D" style="background: #92FE9D;"></button>
+                        <button class="color-btn" data-color="#FF512F" style="background: #FF512F;"></button>
+                        <button class="color-btn" data-color="#F09819" style="background: #F09819;"></button>
+                        <button class="color-btn" data-color="#D53369" style="background: #D53369;"></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: CONTACTS -->
+            <div id="tab-contacts" class="tab-content" style="display: none;">
+                <h2 style="margin-bottom: 1.5rem;">Contacts</h2>
+                <div class="input-group" style="margin-bottom: 1.5rem;">
+                    <input type="text" id="contact-search" placeholder="Search by username..." style="background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); padding: 1rem; border-radius: 12px; color: white; width: 100%;">
+                    <button id="search-btn" class="btn btn-primary" style="margin-top: 0.5rem; width: 100%;">Search User</button>
+                </div>
+                <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">Favorites</h3>
+                <div class="links-list" id="favorites-list">
+                    <!-- Dynamic Favorites -->
+                </div>
+            </div>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item" data-tab="tab-insights">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>INSIGHTS</span>
+            </a>
+            <a href="#" class="nav-item" data-tab="tab-styles">
+                <i class="fa-solid fa-palette"></i>
+                <span>STYLE</span>
+            </a>
+            <a href="#" class="nav-item" data-tab="tab-contacts">
+                <i class="fa-solid fa-users"></i>
+                <span>CONTACTS</span>
+            </a>
+            <a href="#" class="nav-item active" data-tab="tab-profile">
+                <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200&auto=format&fit=crop" class="nav-avatar" id="nav-avatar" alt="Nav Avatar">
+            </a>
+        </nav>
+        
+        <!-- QR Code Modal (Hidden by default) -->
+        <div class="modal-overlay" id="qr-modal">
+            <div class="glass-card modal-content">
+                <button class="close-modal" id="close-qr"><i class="fa-solid fa-xmark"></i></button>
+                <h3>Share Your Profile</h3>
+                <p>nexus/<span id="share-username">ahmed</span></p>
+                <div id="qrcode" class="qr-container"></div>
+                <button class="btn btn-primary" id="copy-link-btn" style="margin-top: 1rem; width: 100%;">Copy Link</button>
+            </div>
+        </div>
+
+        <!-- Edit Profile Modal -->
+        <div class="modal-overlay" id="edit-modal">
+            <div class="glass-card modal-content" style="max-height: 80vh; overflow-y: auto; text-align: left;">
+                <button class="close-modal" id="close-edit"><i class="fa-solid fa-xmark"></i></button>
+                <h3 style="margin-bottom: 1.5rem; text-align: center;">Edit Profile</h3>
+                <form id="edit-profile-form" class="signup-form" style="margin-top: 0;">
+                    
+                    <div class="input-group">
+                        <label>Avatar Image (Device)</label>
+                        <input type="file" id="edit-avatar-file" accept="image/*" style="padding: 0.5rem; background: transparent; border: none;">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Banner Image (Device)</label>
+                        <input type="file" id="edit-banner-file" accept="image/*" style="padding: 0.5rem; background: transparent; border: none;">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="edit-name">Display Name</label>
+                        <input type="text" id="edit-name" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="edit-title">Title</label>
+                        <input type="text" id="edit-title">
+                    </div>
+                    <div class="input-group">
+                        <label for="edit-bio">Bio</label>
+                        <textarea id="edit-bio" rows="3" style="background: rgba(0, 0, 0, 0.2); border: 1px solid var(--glass-border); padding: 1rem; border-radius: 12px; color: white; font-family: inherit; resize: vertical;"></textarea>
+                    </div>
+                    
+                    <h4 style="margin-top: 1rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                        Links 
+                        <button type="button" class="badge-btn" id="add-link-btn" style="background: var(--accent-primary);">+ Add Link</button>
+                    </h4>
+                    
+                    <div id="edit-links-container" style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem;"></div>
+
+                    <button type="submit" class="btn btn-primary" style="margin-top: 1.5rem; width: 100%;">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
