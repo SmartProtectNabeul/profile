@@ -1,58 +1,126 @@
-// Simulated Database Service using localStorage
-// This acts as a placeholder for Supabase/Firebase
+// Supabase Database Service
+const SUPABASE_URL = 'https://slkrndsblwtlcpbzlheb.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_Oqlac0mR0IQcst2NXzqpNQ_hIZg2e1Y';
+
+let supabaseClient = null;
+if (typeof supabase !== 'undefined') {
+    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+}
+
 window.DB = {
     // --- Users Table ---
-    // Structure: { username: { profileData, links, style: { accent: '#7b61ff' } } }
-    getUsers: function() {
-        return JSON.parse(localStorage.getItem('nexus_db_users')) || {};
+    getUser: async function(username) {
+        if (!supabaseClient) return null;
+        
+        const { data: profile } = await supabaseClient.from('profiles').select('*').eq('username', username).single();
+        if (!profile) return null;
+        
+        const { data: links } = await supabaseClient.from('links').select('*').eq('username', username).order('order_index', { ascending: true });
+        
+        return {
+            profile: {
+                name: profile.name,
+                title: profile.title,
+                bio: profile.bio,
+                avatar: profile.avatar,
+                banner: profile.banner
+            },
+            links: links || [],
+            style: { accent: profile.style_accent || '#7b61ff' }
+        };
     },
-    saveUsers: function(users) {
-        localStorage.setItem('nexus_db_users', JSON.stringify(users));
-    },
-    getUser: function(username) {
-        return this.getUsers()[username] || null;
-    },
-    saveUser: function(username, data) {
-        const users = this.getUsers();
-        users[username] = { ...users[username], ...data };
-        this.saveUsers(users);
+
+    saveUser: async function(username, data) {
+        if (!supabaseClient) return;
+
+        // Upsert Profile
+        await supabaseClient.from('profiles').upsert({
+            username: username,
+            name: data.profile.name,
+            title: data.profile.title,
+            bio: data.profile.bio,
+            avatar: data.profile.avatar,
+            banner: data.profile.banner,
+            style_accent: data.style.accent
+        });
+
+        // Delete old links and insert new
+        await supabaseClient.from('links').delete().eq('username', username);
+        
+        if (data.links && data.links.length > 0) {
+            const newLinks = data.links.map((l, index) => ({
+                username: username,
+                type: l.type,
+                title: l.title,
+                url: l.url,
+                value: l.value,
+                order_index: index
+            }));
+            await supabaseClient.from('links').insert(newLinks);
+        }
     },
 
     // --- Insights Table ---
-    // Structure: { targetUsername: [ { viewerUsername, date } ] }
-    recordView: function(targetUsername, viewerUsername) {
-        if(targetUsername === viewerUsername) return; // Don't count self
-        const views = JSON.parse(localStorage.getItem('nexus_db_views')) || {};
-        if (!views[targetUsername]) views[targetUsername] = [];
+    recordView: async function(targetUsername, viewerUsername) {
+        if (!supabaseClient || targetUsername === viewerUsername) return;
         
-        // Prevent duplicate views in same session if wanted, but let's just log it
-        views[targetUsername].push({ viewer: viewerUsername || 'Anonymous', date: new Date().toISOString() });
-        localStorage.setItem('nexus_db_views', JSON.stringify(views));
+        await supabaseClient.from('profile_views').insert({
+            target_username: targetUsername,
+            viewer_username: viewerUsername || 'Anonymous'
+        });
     },
-    getViews: function(username) {
-        const views = JSON.parse(localStorage.getItem('nexus_db_views')) || {};
-        return views[username] || [];
+
+    getViews: async function(username) {
+        if (!supabaseClient) return [];
+        const { data } = await supabaseClient.from('profile_views').select('*').eq('target_username', username).order('created_at', { ascending: false });
+        return (data || []).map(v => ({ viewer: v.viewer_username, date: v.created_at }));
     },
 
     // --- Contacts Table ---
-    // Structure: { username: [ 'fav_user1', 'fav_user2' ] }
-    addFavorite: function(username, target) {
-        const favs = JSON.parse(localStorage.getItem('nexus_db_favs')) || {};
-        if (!favs[username]) favs[username] = [];
-        if (!favs[username].includes(target)) {
-            favs[username].push(target);
-            localStorage.setItem('nexus_db_favs', JSON.stringify(favs));
-        }
+    addFavorite: async function(username, target) {
+        if (!supabaseClient) return;
+        await supabaseClient.from('favorites').upsert({
+            username: username,
+            favorite_username: target
+        }, { onConflict: 'username,favorite_username' });
     },
-    removeFavorite: function(username, target) {
-        const favs = JSON.parse(localStorage.getItem('nexus_db_favs')) || {};
-        if (favs[username]) {
-            favs[username] = favs[username].filter(f => f !== target);
-            localStorage.setItem('nexus_db_favs', JSON.stringify(favs));
-        }
+    
+    removeFavorite: async function(username, target) {
+        if (!supabaseClient) return;
+        await supabaseClient.from('favorites').delete().match({ username: username, favorite_username: target });
     },
-    getFavorites: function(username) {
-        const favs = JSON.parse(localStorage.getItem('nexus_db_favs')) || {};
-        return favs[username] || [];
+
+    getFavorites: async function(username) {
+        if (!supabaseClient) return [];
+        const { data } = await supabaseClient.from('favorites').select('favorite_username').eq('username', username);
+        return (data || []).map(f => f.favorite_username);
+    },
+
+    // --- Admin Functions ---
+    getRequests: async function() {
+        if (!supabaseClient) return [];
+        const { data } = await supabaseClient.from('access_requests').select('*').order('created_at', { ascending: false });
+        return data || [];
+    },
+    
+    addRequest: async function(requestData) {
+        if (!supabaseClient) return;
+        await supabaseClient.from('access_requests').insert([requestData]);
+    },
+
+    acceptRequest: async function(id, status) {
+        if (!supabaseClient) return;
+        await supabaseClient.from('access_requests').update({ status: status }).eq('id', id);
+    },
+
+    getKeys: async function() {
+        if (!supabaseClient) return [];
+        const { data } = await supabaseClient.from('access_keys').select('*').order('created_at', { ascending: false });
+        return data || [];
+    },
+
+    addKey: async function(keyData) {
+        if (!supabaseClient) return;
+        await supabaseClient.from('access_keys').insert([keyData]);
     }
 };

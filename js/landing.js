@@ -37,20 +37,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const requestForm = document.getElementById('request-form');
     if (requestForm) {
-        requestForm.addEventListener('submit', (e) => {
+        requestForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const offer = document.getElementById('req-offer').value;
             const email = document.getElementById('req-email').value;
             const number = document.getElementById('req-number').value;
             const trx = document.getElementById('req-trx').value;
 
-            // Save to simulated database
-            const requests = JSON.parse(localStorage.getItem('nexus_requests')) || [];
-            requests.push({
-                date: new Date().toISOString(),
-                offer, email, number, trx, status: 'Pending'
+            // Save to Supabase
+            await window.DB.addRequest({
+                email: email,
+                phone_number: number,
+                offer: offer,
+                trx_id: trx,
+                status: 'Pending'
             });
-            localStorage.setItem('nexus_requests', JSON.stringify(requests));
 
             alert('Your request has been sent successfully. Please wait for an email with your key!');
             requestForm.reset();
@@ -59,15 +60,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const signupForm = document.getElementById('signup-form');
     if (signupForm) {
-        signupForm.addEventListener('submit', (e) => {
+        signupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const key = document.getElementById('access-key').value;
             const username = document.getElementById('username').value;
             
-            const keys = JSON.parse(localStorage.getItem('nexus_keys')) || [];
-            const validKey = keys.find(k => k.key === key);
+            const keys = await window.DB.getKeys();
+            const validKey = keys.find(k => k.access_key === key);
 
-            // Simulation: allow test keys or any key > 5 length for demo
+            // Supabase key verification
             if (validKey || (key.length > 5 && username.length > 2)) {
                 localStorage.setItem('nexus_username', username);
                 localStorage.setItem('nexus_key', key);

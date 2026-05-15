@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const isDashboard = document.querySelector('.dashboard-body') !== null;
     
     if (isDashboard) {
@@ -9,9 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const targetUsername = isViewMode ? viewUser : currentUser;
 
         // DB Migration / Fetch Data
-        let userData = window.DB.getUser(targetUsername);
+        let userData = await window.DB.getUser(targetUsername);
         if (!userData) {
-            // Default mock data
+            // Default mock data if no db record
             userData = {
                 profile: {
                     name: targetUsername === 'ahmed' ? 'Ahmed Najjar' : targetUsername,
@@ -24,13 +24,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 style: { accent: '#7b61ff' }
             };
             
-            // Migrate legacy data if it's the current user
+            // Initial save
             if (!isViewMode) {
-                const legProf = JSON.parse(localStorage.getItem('nexus_profile'));
-                if (legProf) userData.profile = legProf;
-                const legLinks = JSON.parse(localStorage.getItem('nexus_links'));
-                if (legLinks) userData.links = legLinks;
-                window.DB.saveUser(targetUsername, userData);
+                await window.DB.saveUser(targetUsername, userData);
             }
         }
 
@@ -48,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelector('.dashboard-main').style.paddingBottom = '2rem';
 
             // Record View
-            window.DB.recordView(targetUsername, currentUser);
+            await window.DB.recordView(targetUsername, currentUser);
         }
 
         // Apply Style
@@ -64,42 +60,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const targetTab = item.getAttribute('data-tab');
                 if(!targetTab) return;
 
-                // Update active classes
                 navItems.forEach(nav => nav.classList.remove('active'));
                 item.classList.add('active');
 
-                // Update contents
                 tabs.forEach(tab => {
                     tab.style.display = tab.id === targetTab ? 'block' : 'none';
                 });
             });
         });
-
-        // --- Load Profile Display ---
-        const loadProfileDisplay = () => {
-            const usernameDisplay = document.getElementById('share-username');
-            if (usernameDisplay) usernameDisplay.textContent = targetUsername;
-
-            document.getElementById('profile-name').textContent = userData.profile.name;
-            document.getElementById('profile-title').textContent = userData.profile.title;
-            document.getElementById('profile-desc').innerHTML = userData.profile.bio.replace(/\n/g, '<br>');
-            document.getElementById('avatar-img').src = userData.profile.avatar;
-            document.getElementById('banner-img').src = userData.profile.banner;
-            
-            const navAvatar = document.getElementById('nav-avatar');
-            if (navAvatar) navAvatar.src = userData.profile.avatar;
-
-            // Form Fields
-            if (!isViewMode) {
-                document.getElementById('edit-name').value = userData.profile.name;
-                document.getElementById('edit-title').value = userData.profile.title;
-                document.getElementById('edit-bio').value = userData.profile.bio;
-                renderEditLinks();
-                renderInsights();
-                renderContacts();
-            }
-            renderLinks();
-        };
 
         // --- Render Links ---
         const linksContainer = document.getElementById('links-container');
@@ -130,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 linkEl.className = 'glass-card link-item';
                 linkEl.style.textDecoration = 'none';
                 linkEl.style.color = 'inherit';
-                linkEl.setAttribute('data-id', link.id);
+                linkEl.setAttribute('data-id', link.id || link.url);
                 
                 linkEl.innerHTML = `
                     <div class="link-icon" style="background: ${config.bg}; color: ${config.color};">
@@ -153,17 +121,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 new Sortable(linksContainer, {
                     handle: '.drag-handle',
                     animation: 150,
-                    onEnd: function (evt) {
+                    onEnd: async function (evt) {
                         const items = Array.from(linksContainer.children);
                         const newOrderIds = items.map(el => el.getAttribute('data-id'));
                         
                         const newLinks = [];
                         newOrderIds.forEach(id => {
-                            const found = userData.links.find(l => l.id === id);
+                            const found = userData.links.find(l => (l.id || l.url) === id);
                             if(found) newLinks.push(found);
                         });
                         userData.links = newLinks;
-                        window.DB.saveUser(targetUsername, userData);
+                        await window.DB.saveUser(targetUsername, userData);
                     }
                 });
             }
@@ -219,15 +187,40 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // --- Load Profile Display ---
+        const loadProfileDisplay = async () => {
+            const usernameDisplay = document.getElementById('share-username');
+            if (usernameDisplay) usernameDisplay.textContent = targetUsername;
+
+            document.getElementById('profile-name').textContent = userData.profile.name;
+            document.getElementById('profile-title').textContent = userData.profile.title;
+            document.getElementById('profile-desc').innerHTML = userData.profile.bio.replace(/\n/g, '<br>');
+            document.getElementById('avatar-img').src = userData.profile.avatar;
+            document.getElementById('banner-img').src = userData.profile.banner;
+            
+            const navAvatar = document.getElementById('nav-avatar');
+            if (navAvatar) navAvatar.src = userData.profile.avatar;
+
+            if (!isViewMode) {
+                document.getElementById('edit-name').value = userData.profile.name;
+                document.getElementById('edit-title').value = userData.profile.title;
+                document.getElementById('edit-bio').value = userData.profile.bio;
+                renderEditLinks();
+                await renderInsights();
+                await renderContacts();
+            }
+            renderLinks();
+        };
+
         // --- Insights ---
-        const renderInsights = () => {
-            const views = window.DB.getViews(targetUsername);
+        const renderInsights = async () => {
+            const views = await window.DB.getViews(targetUsername);
             document.getElementById('insights-views').textContent = views.length;
             
             const list = document.getElementById('recent-visitors-list');
             list.innerHTML = '';
             
-            [...views].reverse().slice(0, 10).forEach(v => {
+            views.slice(0, 10).forEach(v => {
                 const div = document.createElement('div');
                 div.className = 'glass-card link-item';
                 div.innerHTML = `
@@ -244,19 +237,19 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.color-btn').forEach(btn => {
             if(btn.dataset.color === userData.style.accent) btn.classList.add('active');
             
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', async () => {
                 document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 
                 userData.style.accent = btn.dataset.color;
                 document.documentElement.style.setProperty('--accent-primary', userData.style.accent);
-                window.DB.saveUser(targetUsername, userData);
+                await window.DB.saveUser(targetUsername, userData);
             });
         });
 
         // --- Contacts / Favorites ---
-        const renderContacts = () => {
-            const favs = window.DB.getFavorites(targetUsername);
+        const renderContacts = async () => {
+            const favs = await window.DB.getFavorites(targetUsername);
             const list = document.getElementById('favorites-list');
             list.innerHTML = '';
             
@@ -264,8 +257,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 list.innerHTML = '<p style="text-align:center; color: var(--text-secondary);">No favorites yet.</p>';
             }
 
-            favs.forEach(favU => {
-                const favData = window.DB.getUser(favU) || { profile: { name: favU, title: 'User', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200&auto=format&fit=crop' }};
+            for (const favU of favs) {
+                let favData = await window.DB.getUser(favU);
+                if (!favData) {
+                    favData = { profile: { name: favU, title: 'User', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200&auto=format&fit=crop' }};
+                }
                 const div = document.createElement('a');
                 div.href = `dashboard.html?u=${favU}`;
                 div.className = 'glass-card contact-item';
@@ -278,29 +274,29 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button class="btn btn-icon remove-fav-btn" data-user="${favU}" style="background: rgba(255,0,0,0.2);"><i class="fa-solid fa-heart-crack"></i></button>
                 `;
                 list.appendChild(div);
-            });
+            }
 
             document.querySelectorAll('.remove-fav-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault(); // prevent navigation
-                    window.DB.removeFavorite(targetUsername, btn.dataset.user);
-                    renderContacts();
+                btn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    await window.DB.removeFavorite(targetUsername, btn.dataset.user);
+                    await renderContacts();
                 });
             });
         };
 
         const searchBtn = document.getElementById('search-btn');
         if (searchBtn) {
-            searchBtn.addEventListener('click', () => {
+            searchBtn.addEventListener('click', async () => {
                 const q = document.getElementById('contact-search').value;
                 if (!q) return;
-                const found = window.DB.getUser(q);
+                const found = await window.DB.getUser(q);
                 if (found) {
-                    window.DB.addFavorite(targetUsername, q);
-                    renderContacts();
+                    await window.DB.addFavorite(targetUsername, q);
+                    await renderContacts();
                     document.getElementById('contact-search').value = '';
                 } else {
-                    alert('User not found!');
+                    alert('User not found in Supabase Database!');
                 }
             });
         }
@@ -323,7 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const editProfileForm = document.getElementById('edit-profile-form');
         const editModal = document.getElementById('edit-modal');
         if (editProfileForm) {
-            editProfileForm.addEventListener('submit', (e) => {
+            editProfileForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 userData.profile.name = document.getElementById('edit-name').value;
                 userData.profile.title = document.getElementById('edit-title').value;
@@ -331,8 +327,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if(pendingAvatarBase64) userData.profile.avatar = pendingAvatarBase64;
                 if(pendingBannerBase64) userData.profile.banner = pendingBannerBase64;
                 
-                window.DB.saveUser(targetUsername, userData);
-                loadProfileDisplay();
+                await window.DB.saveUser(targetUsername, userData);
+                await loadProfileDisplay();
                 editModal.classList.remove('active');
             });
         }
@@ -378,7 +374,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Initialize display
-        loadProfileDisplay();
+        await loadProfileDisplay();
     }
 });
