@@ -125,12 +125,22 @@ window.DB = {
     
     addRequest: async function(requestData) {
         if (!supabaseClient) return;
-        await supabaseClient.from('access_requests').insert([requestData]);
+        const { error } = await supabaseClient.from('access_requests').insert([requestData]);
+        if (error) {
+            console.error("Error adding request:", error);
+            alert("Database Error (Access Denied): " + error.message + "\n\nPlease ensure you have disabled Row Level Security on the access_requests table.");
+            throw error;
+        }
     },
 
     acceptRequest: async function(id, status) {
         if (!supabaseClient) return;
-        await supabaseClient.from('access_requests').update({ status: status }).eq('id', id);
+        const { error } = await supabaseClient.from('access_requests').update({ status: status }).eq('id', id);
+        if (error) {
+            console.error("Error updating request:", error);
+            alert("Database Error (Access Denied): " + error.message + "\n\nPlease ensure you have disabled Row Level Security on the access_requests table.");
+            throw error;
+        }
     },
 
     getKeys: async function() {
@@ -141,6 +151,11 @@ window.DB = {
 
     addKey: async function(keyData) {
         if (!supabaseClient) return;
-        await supabaseClient.from('access_keys').insert([keyData]);
+        const { error } = await supabaseClient.from('access_keys').insert([keyData]);
+        if (error) {
+            console.error("Error adding key:", error);
+            alert("Database Error (Access Denied): " + error.message + "\n\nPlease ensure you have disabled Row Level Security on the access_keys table.");
+            throw error;
+        }
     }
 };

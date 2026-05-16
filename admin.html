@@ -73,11 +73,11 @@
             requests.forEach((r, index) => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${new Date(r.date).toLocaleDateString()}</td>
+                    <td>${new Date(r.created_at).toLocaleDateString()}</td>
                     <td>${r.email}</td>
-                    <td>${r.number}</td>
+                    <td>${r.phone_number}</td>
                     <td>${r.offer}</td>
-                    <td>${r.trx}</td>
+                    <td>${r.trx_id}</td>
                     <td><span class="badge-status ${r.status === 'Pending' ? 'status-pending' : 'status-accepted'}">${r.status}</span></td>
                     <td>
                         ${r.status === 'Pending' ? `<button class="btn btn-primary" style="padding: 0.5rem;" onclick="acceptRequest('${r.id}', '${r.email}', '${r.offer}')">Accept</button>` : '-'}
