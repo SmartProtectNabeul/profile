@@ -44,13 +44,50 @@
             </div>
 
             <!-- Tab Navigation for Forms -->
-            <div class="form-tabs" style="display: flex; justify-content: center; gap: 1rem; margin-bottom: 2rem;">
-                <button class="btn badge-btn active" id="tab-request">Request Access</button>
-                <button class="btn badge-btn" id="tab-login" style="background: rgba(255,255,255,0.1);">I Have a Key</button>
+            <div class="form-tabs" style="display: flex; justify-content: center; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
+                <button class="btn badge-btn active" id="tab-signin">Sign In</button>
+                <button class="btn badge-btn" id="tab-create" style="background: rgba(255,255,255,0.1);">Create Account</button>
+                <button class="btn badge-btn" id="tab-request" style="background: rgba(255,255,255,0.1);">Request Key</button>
+            </div>
+
+            <!-- Sign In Section -->
+            <div class="signup-section glass-card" id="signin-section">
+                <h2>Welcome Back</h2>
+                <form id="signin-form" class="signup-form">
+                    <div class="input-group">
+                        <label for="signin-username">Username</label>
+                        <input type="text" id="signin-username" placeholder="nexus/yourname" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="signin-password">Password</label>
+                        <input type="password" id="signin-password" placeholder="Your password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Sign In</button>
+                </form>
+            </div>
+
+            <!-- Create Account Section -->
+            <div class="signup-section glass-card" id="create-section" style="display: none;">
+                <h2>Got your access key?</h2>
+                <form id="create-form" class="signup-form">
+                    <div class="input-group">
+                        <label for="create-username">Choose Username</label>
+                        <input type="text" id="create-username" placeholder="nexus/yourname" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="create-password">Choose Password</label>
+                        <input type="password" id="create-password" placeholder="Create a password" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="access-key">Access Key</label>
+                        <input type="text" id="access-key" placeholder="Enter the key sent to your email" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Profile</button>
+                </form>
             </div>
 
             <!-- Request Form Section -->
-            <div class="signup-section glass-card" id="request-section">
+            <div class="signup-section glass-card" id="request-section" style="display: none;">
                 <h2 id="selected-offer-title">Request Access</h2>
                 <p>Send your payment via D17 to <strong style="color: var(--accent-primary); font-size: 1.2rem;">58 885 966</strong></p>
                 <form id="request-form" class="signup-form">
@@ -68,22 +105,6 @@
                         <input type="text" id="req-trx" placeholder="D17 Transaction ID" required>
                     </div>
                     <button type="submit" class="btn btn-primary">Send Request</button>
-                </form>
-            </div>
-
-            <!-- Login Form Section -->
-            <div class="signup-section glass-card" id="login-section" style="display: none;">
-                <h2>Got your access key?</h2>
-                <form id="signup-form" class="signup-form">
-                    <div class="input-group">
-                        <label for="access-key">Access Key</label>
-                        <input type="text" id="access-key" placeholder="Enter the key sent to your email" required>
-                    </div>
-                    <div class="input-group">
-                        <label for="username">Choose Username</label>
-                        <input type="text" id="username" placeholder="nexus/yourname" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Create Profile</button>
                 </form>
             </div>
         </main>

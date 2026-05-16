@@ -4,6 +4,7 @@
 CREATE TABLE profiles (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     username TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
     name TEXT,
     title TEXT,
     bio TEXT,

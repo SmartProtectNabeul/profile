@@ -9,6 +9,27 @@ if (typeof supabase !== 'undefined') {
 
 window.DB = {
     // --- Users Table ---
+    authenticateUser: async function(username, password) {
+        if (!supabaseClient) return false;
+        const { data: profile } = await supabaseClient.from('profiles').select('password').eq('username', username).single();
+        if (!profile) return false;
+        return profile.password === password;
+    },
+
+    createUser: async function(username, password) {
+        if (!supabaseClient) return false;
+        const { error } = await supabaseClient.from('profiles').insert({
+            username: username,
+            password: password,
+            name: username,
+            title: 'New User',
+            bio: 'Welcome to my Nexus profile',
+            avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200&auto=format&fit=crop',
+            banner: 'https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=1000&auto=format&fit=crop'
+        });
+        return !error;
+    },
+
     getUser: async function(username) {
         if (!supabaseClient) return null;
         
@@ -33,16 +54,15 @@ window.DB = {
     saveUser: async function(username, data) {
         if (!supabaseClient) return;
 
-        // Upsert Profile
-        await supabaseClient.from('profiles').upsert({
-            username: username,
+        // Update Profile (Assume it was created via createUser)
+        await supabaseClient.from('profiles').update({
             name: data.profile.name,
             title: data.profile.title,
             bio: data.profile.bio,
             avatar: data.profile.avatar,
             banner: data.profile.banner,
             style_accent: data.style.accent
-        });
+        }).eq('username', username);
 
         // Delete old links and insert new
         await supabaseClient.from('links').delete().eq('username', username);
